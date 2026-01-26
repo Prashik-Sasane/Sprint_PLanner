@@ -40,21 +40,32 @@ for i in range(1, 30):
     })
 df_sprints = pd.DataFrame(sprints_data)
 
-# --- 3. TABLE: HISTORICAL_TASKS (The AI Training Data) ---
+# --- 3. TABLE: HISTORICAL_TASKS (With Failure Logic) ---
 tasks_data = []
-for i in range(1, 1001): # Let's generate 150 tasks
+for i in range(1, 2001): 
     assigned_dev = random.choice(devs_data)
     sprint = random.choice(sprints_data)
     est_points = random.choice([1, 2, 3, 5, 8])
     
-    # SMART LOGIC: 
-    # Juniors (Bob) take 1.5x longer. 
-    # If team_load is > 100%, tasks take an extra 1.2x longer due to fatigue.
+    # NEW ACCURACY LOGIC: Give every level a distinct "speed"
     multiplier = 1.0
-    if assigned_dev['experience_level'] == 'Junior': multiplier *= 1.5
-    if sprint['team_load_percentage'] > 100: multiplier *= 1.2
+    if assigned_dev['experience_level'] == 'Junior': 
+        multiplier = 1.8   # Junior is slowest
+    elif assigned_dev['experience_level'] == 'Mid': 
+        multiplier = 1.3   # Mid is in between
+    elif assigned_dev['experience_level'] == 'Senior': 
+        multiplier = 0.9   # Senior is fastest (even faster than base)
     
-    actual_hrs = (est_points * 8) * multiplier + random.uniform(-3, 3)
+    # Add fatigue if team is overloaded
+    if sprint['team_load_percentage'] > 100: 
+        multiplier *= 1.2
+    
+    # Calculate final hours with slight randomness
+    actual_hrs = (est_points * 8) * multiplier + random.uniform(-2, 2)
+    
+    # Failure Logic
+    expected_hours = est_points * 8
+    is_failed = 1 if actual_hrs > (expected_hours * 1.25) else 0
     
     tasks_data.append({
         'task_id': i,
@@ -62,7 +73,8 @@ for i in range(1, 1001): # Let's generate 150 tasks
         'sprint_id': sprint['sprint_id'],
         'category': assigned_dev['primary_skill'],
         'story_points': est_points,
-        'actual_hours': round(actual_hrs, 2)
+        'actual_hours': round(actual_hrs, 2),
+        'is_failed': is_failed 
     })
 df_tasks = pd.DataFrame(tasks_data)
 

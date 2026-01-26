@@ -1,47 +1,41 @@
 import pandas as pd
 from sqlalchemy import create_engine
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
+import joblib
 import urllib.parse
 
-# 1. CONNECT TO YOUR WAREHOUSE
+# 1. Database Connection
 user = "root"
 raw_password = "Siddhesh@24"
 password = urllib.parse.quote_plus(raw_password)
 engine = create_engine(f"mysql+pymysql://{user}:{password}@localhost/smart_planner")
 
-# 2. THE BIG JOIN (Fetching data into one view)
+# 2. Fetch the new data (including is_failed)
 query = """
-SELECT 
-    t.story_points, 
-    t.actual_hours, 
-    d.experience_level, 
-    s.team_load_percentage 
+SELECT t.story_points, t.actual_hours, t.is_failed, d.experience_level, s.team_load_percentage 
 FROM historical_tasks t
 JOIN developers d ON t.dev_id = d.dev_id
 JOIN sprint_context s ON t.sprint_id = s.sprint_id;
 """
 df = pd.read_sql(query, con=engine)
-print("✅ Data fetched and joined successfully!")
 
-# 3. ENCODING (Convert words to numbers)
-# Mapping: Junior=1, Mid=2, Senior=3
+# 3. Encoding
 level_map = {'Junior': 1, 'Mid': 2, 'Senior': 3}
 df['experience_level'] = df['experience_level'].map(level_map)
 
-# 4. SPLIT DATA INTO INPUTS (X) AND OUTPUT (y)
-X = df[['story_points', 'experience_level', 'team_load_percentage']] # Inputs
-y = df['actual_hours'] # The answer we want to predict
+# 4. Define Inputs (X)
+X = df[['story_points', 'experience_level', 'team_load_percentage']]
 
-# 5. INITIALIZE THE BRAIN (Decision Tree)
-model = RandomForestRegressor(n_estimators=100, random_state=42)
+# --- BRAIN 1: THE REGRESSOR (Predicts Time) ---
+model_time = RandomForestRegressor(n_estimators=100, max_depth=5, random_state=42)
+model_time.fit(X, df['actual_hours'])
 
-# 6. TRAIN THE BRAIN (This is the learning part)
-model.fit(X, y)
-print("🧠 The AI Brain is now trained!")
+# --- BRAIN 2: THE CLASSIFIER (Predicts Failure Probability) ---
+model_risk = RandomForestClassifier(n_estimators=100, max_depth=5, random_state=42)
+model_risk.fit(X, df['is_failed'])
 
-# 7. TEST THE BRAIN
-# Let's pretend a new task comes in: 
-# 8 Story Points, Junior Dev (1), Team Load 110%
-print(f"Junior (1): {model.predict([[5, 1, 100]])[0]:.2f}")
-print(f"Mid    (2): {model.predict([[5, 2, 100]])[0]:.2f}")
-print(f"Senior (3): {model.predict([[5, 3, 100]])[0]:.2f}")
+# 5. Save both brains
+joblib.dump(model_time, 'time_model.pkl')
+joblib.dump(model_risk, 'risk_model.pkl')
+
+print("✅ Phase 4.5 Training Complete: Both brains are ready!")
