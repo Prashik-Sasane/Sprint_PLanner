@@ -5,14 +5,14 @@ from sqlalchemy import create_engine
 
 # --- 0. CONNECTION SETUP ---
 user = "root"
-raw_password = "Siddhesh@24"
+raw_password = "12410279"
 password = urllib.parse.quote_plus(raw_password)
 host = "localhost"
 db = "smart_planner"
 
 engine = create_engine(f"mysql+pymysql://{user}:{password}@{host}/{db}")
 
-print("🚀 Starting Phase 1: Full Database Population...")
+print(" Starting Phase 1: Full Database Population...")
 
 # --- 1. TABLE: DEVELOPERS ---
 devs_data = [
@@ -87,16 +87,16 @@ try:
     
     # Push Parents First
     df_devs.to_sql('developers', con=engine, if_exists='replace', index=False)
-    print("✅ Table 1: 'developers' updated.")
+    print("Table 1: 'developers' updated.")
     
     df_sprints.to_sql('sprint_context', con=engine, if_exists='replace', index=False)
-    print("✅ Table 2: 'sprint_context' updated.")
+    print("Table 2: 'sprint_context' updated.")
     
     # Push Child Last
     df_tasks.to_sql('historical_tasks', con=engine, if_exists='replace', index=False)
-    print("✅ Table 3: 'historical_tasks' updated.")
+    print("Table 3: 'historical_tasks' updated.")
     
-    print("\n🎉 PHASE 1 COMPLETE! All 3 tables populated.")
+    print("\n PHASE 1 COMPLETE! All 3 tables populated.")
 
 except Exception as e:
-    print(f"❌ Error: {e}")
+    print(f" Error: {e}")
