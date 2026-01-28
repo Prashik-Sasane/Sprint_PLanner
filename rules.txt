@@ -1,0 +1,3 @@
+1.A task usually "fails" if it takes significantly longer than estimated (e.g., more than 20% over the expected time).
+2.Don't use a sledgehammer to crack a nut. If a Junior can finish a task within the deadline and under a certain risk threshold,
+ they are the "Best Match" because it frees up the Senior for harder tasks.

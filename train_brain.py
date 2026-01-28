@@ -1,12 +1,18 @@
 import pandas as pd
+import os
 from sqlalchemy import create_engine
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 import joblib
 import urllib.parse
+import pathlib
+from dotenv import load_dotenv
 
 # 1. Database Connection
-user = "root"
-raw_password = "Siddhesh@24"
+
+load_dotenv()
+
+user = os.getenv("DB_USER")
+raw_password = os.getenv("DB_PASSWORD")
 password = urllib.parse.quote_plus(raw_password)
 engine = create_engine(f"mysql+pymysql://{user}:{password}@localhost/smart_planner")
 

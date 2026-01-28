@@ -1,14 +1,19 @@
 import pandas as pd
 import random
+import os
 import urllib.parse
+import pathlib
 from sqlalchemy import create_engine
+from dotenv import load_dotenv
 
 # --- 0. CONNECTION SETUP ---
-user = "root"
-raw_password = "Siddhesh@24"
+load_dotenv()
+
+user = os.getenv("DB_USER")
+raw_password = os.getenv("DB_PASSWORD")
+host = os.getenv("DB_HOST")
+db = os.getenv("DB_NAME")
 password = urllib.parse.quote_plus(raw_password)
-host = "localhost"
-db = "smart_planner"
 
 engine = create_engine(f"mysql+pymysql://{user}:{password}@{host}/{db}")
 
@@ -35,8 +40,8 @@ sprints_data = []
 for i in range(1, 30):
     sprints_data.append({
         'sprint_id': i,
-        'team_load_percentage': random.choice([80, 90, 100, 110]), # Overloaded or underloaded
-        'is_holiday_season': 1 if i == 5 else 0 # Pretend Sprint 5 was during holidays
+        'team_load_percentage': random.choice([80, 90, 100, 110]), 
+        'is_holiday_season': 1 if i == 5 else 0 
     })
 df_sprints = pd.DataFrame(sprints_data)
 
@@ -47,14 +52,14 @@ for i in range(1, 2001):
     sprint = random.choice(sprints_data)
     est_points = random.choice([1, 2, 3, 5, 8])
     
-    # NEW ACCURACY LOGIC: Give every level a distinct "speed"
+    
     multiplier = 1.0
     if assigned_dev['experience_level'] == 'Junior': 
-        multiplier = 1.8   # Junior is slowest
+        multiplier = 1.8   
     elif assigned_dev['experience_level'] == 'Mid': 
-        multiplier = 1.3   # Mid is in between
+        multiplier = 1.3   
     elif assigned_dev['experience_level'] == 'Senior': 
-        multiplier = 0.9   # Senior is fastest (even faster than base)
+        multiplier = 0.9  
     
     # Add fatigue if team is overloaded
     if sprint['team_load_percentage'] > 100: 
