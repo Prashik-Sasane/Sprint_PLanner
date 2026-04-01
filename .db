@@ -6,15 +6,15 @@ USE smart_planner;
 CREATE TABLE developers (
     dev_id INT PRIMARY KEY,
     name VARCHAR(100),
-    experience_level VARCHAR(20), -- Senior, Mid, Junior
+    experience_level VARCHAR(20), 
     primary_skill VARCHAR(50)
 );
 
 -- 3. Create Sprint Context Table (The "When")
 CREATE TABLE sprint_context (
     sprint_id INT PRIMARY KEY,
-    team_load_percentage INT,     -- e.g., 100, 110, 80
-    is_holiday_season BOOLEAN     -- 1 for Yes, 0 for No
+    team_load_percentage INT,     
+    is_holiday_season BOOLEAN     
 );
 
 -- 4. Create Historical Tasks Table (The "What")
