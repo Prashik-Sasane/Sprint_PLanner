@@ -3,22 +3,23 @@ import random
 import os
 import urllib.parse
 import pathlib
-from sqlalchemy import create_engine
+from sqlalchemy import Integer, Float, String, Boolean
+from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
 
 # --- 0. CONNECTION SETUP ---
 load_dotenv()
 
-user = os.getenv("DB_USER")
-raw_password = os.getenv("DB_PASSWORD")
-host = os.getenv("DB_HOST")
-db = os.getenv("DB_NAME")
+user = os.getenv("DB_USER", "root")
+raw_password = os.getenv("DB_PASSWORD", "12410279")
+host = os.getenv("DB_HOST", "db")
+db = os.getenv("DB_NAME", "smart_planner")
 password = urllib.parse.quote_plus(raw_password)
 
 engine = create_engine(f"mysql+pymysql://{user}:{password}@{host}/{db}")
 
 print("🚀 Starting Phase 1: Full Database Population...")
-
+print("DB CONFIG:", user, host, raw_password)
 # --- 1. TABLE: DEVELOPERS ---
 skills = ['Backend', 'Frontend', 'API', 'DevOps', 'UI/UX', 'Database', 'Security', 'Mobile']
 levels = ['Junior', 'Mid', 'Senior']
@@ -98,23 +99,75 @@ df_sprint_table = pd.DataFrame(new_tasks)
 # --- 5. PUSHING TO MYSQL (Unified Order) ---
 try:
     print("⏳ Clearing and updating tables for Enterprise Scale...")
-    
-    # 1. Push Developers (Parent)
-    df_devs.to_sql('developers', con=engine, if_exists='replace', index=False)
+
+    # Recreate schema explicitly so parent columns are indexed for FKs.
+    with engine.begin() as conn:
+        conn.execute(text("SET FOREIGN_KEY_CHECKS = 0;"))
+        conn.execute(text("DROP TABLE IF EXISTS historical_tasks;"))
+        conn.execute(text("DROP TABLE IF EXISTS sprint_table;"))
+        conn.execute(text("DROP TABLE IF EXISTS sprint_context;"))
+        conn.execute(text("DROP TABLE IF EXISTS developers;"))
+
+        conn.execute(text("""
+            CREATE TABLE developers (
+                dev_id INT NOT NULL,
+                name VARCHAR(100),
+                experience_level VARCHAR(20),
+                primary_skill VARCHAR(50),
+                PRIMARY KEY (dev_id)
+            );
+        """))
+
+        conn.execute(text("""
+            CREATE TABLE sprint_context (
+                sprint_id INT NOT NULL,
+                team_load_percentage INT,
+                is_holiday_season BOOLEAN,
+                PRIMARY KEY (sprint_id)
+            );
+        """))
+
+        conn.execute(text("""
+            CREATE TABLE historical_tasks (
+                task_id INT NOT NULL,
+                dev_id INT NOT NULL,
+                sprint_id INT NOT NULL,
+                category VARCHAR(50),
+                story_points INT,
+                actual_hours FLOAT,
+                is_failed BOOLEAN,
+                PRIMARY KEY (task_id),
+                CONSTRAINT historical_tasks_ibfk_1
+                    FOREIGN KEY (dev_id) REFERENCES developers(dev_id),
+                CONSTRAINT historical_tasks_ibfk_2
+                    FOREIGN KEY (sprint_id) REFERENCES sprint_context(sprint_id)
+            );
+        """))
+
+        conn.execute(text("""
+            CREATE TABLE sprint_table (
+                task_id INT NOT NULL,
+                story_points INT,
+                priority VARCHAR(20),
+                status VARCHAR(50),
+                PRIMARY KEY (task_id)
+            );
+        """))
+        conn.execute(text("SET FOREIGN_KEY_CHECKS = 1;"))
+
+    # Insert data after schema is created.
+    df_devs.to_sql('developers', con=engine, if_exists='append', index=False)
     print("✅ Table 1: 'developers' (150 rows) updated.")
-    
-    # 2. Push Sprint Context (Parent)
-    df_sprints.to_sql('sprint_context', con=engine, if_exists='replace', index=False)
+
+    df_sprints.to_sql('sprint_context', con=engine, if_exists='append', index=False)
     print("✅ Table 2: 'sprint_context' (160 rows) updated.")
-    
-    # 3. Push Historical Tasks (Child - Depends on Devs and Sprints)
-    df_tasks.to_sql('historical_tasks', con=engine, if_exists='replace', index=False)
+
+    df_tasks.to_sql('historical_tasks', con=engine, if_exists='append', index=False)
     print("✅ Table 3: 'historical_tasks' (2000 rows) updated.")
-    
-    # 4. Push Sprint Table (The Current Backlog)
-    df_sprint_table.to_sql('sprint_table', con=engine, if_exists='replace', index=False)
+
+    df_sprint_table.to_sql('sprint_table', con=engine, if_exists='append', index=False)
     print("✅ Table 4: 'sprint_table' (600 rows) updated.")
-    
+
     print("\n🎉 ALL SYSTEMS GO! Database is fully populated for Enterprise Testing.")
 
 except Exception as e:

@@ -44,4 +44,4 @@ model_risk.fit(X, df['is_failed'])
 joblib.dump(model_time, 'time_model.pkl')
 joblib.dump(model_risk, 'risk_model.pkl')
 
-print("✅ Phase 4.5 Training Complete: Both brains are ready!")
+print("Phase 4.5 Training Complete: Both brains are ready!")
