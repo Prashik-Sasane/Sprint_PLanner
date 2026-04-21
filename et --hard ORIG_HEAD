@@ -1,0 +1,13 @@
+[33meab1ced[m[33m ([m[1;36mHEAD[m[33m, [m[1;31morigin/main[m[33m)[m HEAD@{0}: pull --rebase (start): checkout eab1ceda0769accb80d22a13979d514e810bb697
+[33mf88b2f5[m[33m ([m[1;32mmain[m[33m)[m HEAD@{1}: commit: front added and optimised
+[33md2a8901[m HEAD@{2}: commit: Remove .env file
+[33m57d1cfe[m HEAD@{3}: commit: backed added
+[33mf4e117d[m HEAD@{4}: commit: database changed
+[33m2d12860[m HEAD@{5}: commit: Remove .env file from repository
+[33me7703b1[m HEAD@{6}: pull --rebase origin main (finish): returning to refs/heads/main
+[33me7703b1[m HEAD@{7}: pull --rebase origin main (pick): env file added
+[33mdcb7096[m HEAD@{8}: pull --rebase origin main (start): checkout dcb70963e42012c26efdf5098ceb10b0cf7f02e2
+[33m560dfe3[m HEAD@{9}: commit: env file added
+[33mf5f923a[m HEAD@{10}: commit: added recommendationi system
+[33m0ceeb71[m HEAD@{11}: Branch: renamed refs/heads/main to refs/heads/main
+[33m0ceeb71[m HEAD@{13}: commit (initial): first commit/ai is trained

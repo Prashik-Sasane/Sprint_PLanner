@@ -2,7 +2,7 @@ name: Python CI Pipeline
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [main]
   pull_request:
 
 jobs:
@@ -17,15 +17,33 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
-
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
-      - name: Run tests (if exist)
+      - name: Run tests (if present)
         run: |
-          if [ -d "backend/tests" ]; then pytest backend/tests; else echo "No backend tests"; fi
+          if [ -d "Backend/tests" ]; then pytest Backend/tests -v; else echo "No Backend/tests — skipping pytest"; fi
 
-      - name: Validate ML model (if exist)
-        run: |
-          if [ -f "ml/validation.py" ]; then python ml/validation.py; else echo "No ML validation script"; fi
+      - name: Python syntax check
+        run: python -m compileall -q train_brain Backend
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: [tests]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: sprint-planner:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
